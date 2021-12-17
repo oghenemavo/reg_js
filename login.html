@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700">
+    <title>Bootstrap Simple Registration Form</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- <link rel="stylesheet" href="css/pages/signup.css"/> -->
+</head>
+<body>
+
+    <header>
+        <!-- <img src="img/domestireg_logo.png" alt="Domestireg logo"> -->
+</header>
+<div class="signup-form">
+    <form id="login" method="post">
+		<h2>Login</h2>
+        <div class="form-group">
+        	<input type="email" class="form-control" name="email" placeholder="Email" required="required">
+        </div>
+		<div class="form-group">
+            <input type="password" class="form-control" id="password" name="password" placeholder="Password" required="required">
+        </div>    
+		<div class="form-group">
+            <button type="submit" class="btn btn-success btn-lg btn-block">Register Now</button>
+        </div>
+    </form>
+    
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="./js/plugins/jquery.validate.min.js"></script>
+    <script src="./js/plugins/additional-methods.min.js"></script>
+    <script src="./js/plugins/jquery.form.min.js"></script>
+    <script src="./js/script.js"></script>
+    
+    <script>
+        $(function() {
+            let user = new User();
+            user.isUser();
+
+            
+            var options = {
+                type: "POST",
+                url: "https://dregstage.herokuapp.com/api/v1/user/sign_in/",
+                data: $(this).serialize(),
+                dataType: "json",
+                clearForm: null,
+                success: function(response) {
+                    console.log("logged in successfully");
+                    console.log("user json", response);
+                    localStorage.setItem("jwt", response.token);
+
+                    let timerInterval;
+                    Swal.fire({
+                        title: 'Logged in successful!',
+                        html: 'You will be redirected in <b></b> milliseconds.',
+                        timer: 2000,
+                        timerProgressBar: true,
+                        didOpen: () => {
+                            Swal.showLoading();
+                            const b = Swal.getHtmlContainer().querySelector('b');
+                            timerInterval = setInterval(() => {
+                                b.textContent = Swal.getTimerLeft()
+                            }, 100);
+                        },
+                        willClose: () => {
+                            clearInterval(timerInterval);
+                        }
+                    }).then((result) => {
+                        /* Read more about handling dismissals below */
+                        if (result.dismiss === Swal.DismissReason.timer) {
+                            // console.log('I was closed by the timer')
+                            window.location.href = './index.html';
+                        }
+                    })
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    console.log(XMLHttpRequest.status);
+                    console.log(XMLHttpRequest.statusText);
+                    console.log(errorThrown);
+                    console.log("XMLHttpRequest", XMLHttpRequest);
+                    console.log("responseJSON", XMLHttpRequest.responseJSON);
+
+                    alert(XMLHttpRequest.responseJSON.message);
+
+                    $("#login").find("button").html("log in");
+                    $("#login").find("button").prop("disabled", false);
+                }
+            };
+
+            $("#login").validate({
+                rules: {
+                    email: {
+                        required: {
+                            depends: function depends() {
+                                $(this).val($.trim($(this).val()));
+                                return true;
+                            }
+                        },
+                        email: true,
+                    },
+                    password: {
+                        required: true,
+                    },
+                },
+                submitHandler: function(form) {
+                    var loadingText = '<span class="spinner-border spinner-border-md" role="status" aria-hidden="true"></span>Processing...';
+                    $(form).find("button").prop("disabled", true);
+                    $(form).find("button").html(loadingText);
+                    $(form).ajaxSubmit(options);
+                }
+            })
+        });
+    </script>
+</body>
+</html>

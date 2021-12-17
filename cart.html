@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carts</title>
+</head>
+<body>
+
+    <ul id="cart">
+
+    </ul>
+    
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/plugins/owlcarousel/owl.carousel.min.js"></script>
+    <script src="./js/script.js"></script>
+
+    <script>
+        $(function() {
+            let user, jwt;
+            user = new User();
+            jwt = user.getJwt();
+
+            $.ajax({
+                type: "GET",
+                url: `https://dregstage.herokuapp.com/api/v1/user/get_cart`,
+                data: "data",
+                dataType: "json",
+                beforeSend: function (xhr){ 
+                    xhr.setRequestHeader('Content-Type', "application/json;charset=UTF-8"); 
+                    xhr.setRequestHeader('Authorization', `Bearer ${jwt}`); 
+                },
+                success: function (response) {
+                    let items = response.data;
+                    console.log(response.data);
+
+                    let cart = document.getElementById("cart");
+                    
+                    
+                    $.each(items, function(index, item) {
+                        let cart_box = `
+                            <li>${item._id}
+                                <a class="remove-from-cart" data-cart_id="${item._id}" href="#">Remove item</a>
+                            </li>
+                        `;
+
+                        cart.insertAdjacentHTML('beforeend', cart_box);
+
+                        $("a.remove-from-cart").on('click', function(e) {
+                            e.preventDefault();
+                            
+                            if (e.target.hasAttribute("data-cart_id")) {
+                                removeFromCart(e.target.getAttribute("data-cart_id"))
+                            } else {
+                                removeFromCart(e.target.parentElement.getAttribute("data-cart_id"));
+                            }
+                        })
+                    });
+                }
+            });
+        
+            function removeFromCart(cart_id) {
+                $.ajax({
+                    type: "GET",
+                    url: "https://dregstage.herokuapp.com/api/v1/user/remove_item",
+                    data: {"subbouquet_id": cart_id},
+                    dataType: "json",
+                    beforeSend: function (xhr){ 
+                        // xhr.setRequestHeader('Content-Type', "application/json;charset=UTF-8"); 
+                        xhr.setRequestHeader('Authorization', `Bearer ${jwt}`); 
+                    },
+                    success: function (response) {
+                        if (response.error) {
+                            alert(response.message);
+                            
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(XMLHttpRequest, textStatus, errorThrown) {
+                        console.log(XMLHttpRequest.status);
+                        console.log(XMLHttpRequest.statusText);
+                        console.log(errorThrown);
+                        // console.log("XMLHttpRequest", XMLHttpRequest);
+                        // console.log("responseJSON", XMLHttpRequest.responseJSON);
+
+                        // alert(XMLHttpRequest.responseJSON.message);
+
+                        // $("#login").find("button").html("log in");
+                        // $("#login").find("button").prop("disabled", false);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
